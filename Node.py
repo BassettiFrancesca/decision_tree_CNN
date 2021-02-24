@@ -5,8 +5,8 @@ import CNN
 
 
 class Node:
-    def __init__(self, dataset, left_child, right_child, PATH):
-        self.dataset = dataset
+    def __init__(self, data_set, left_child, right_child, PATH):
+        self.data_set = data_set
         self.left_child = left_child
         self.right_child = right_child
         self.PATH = PATH
@@ -14,14 +14,11 @@ class Node:
     def train(self):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        batch_size = 1
         learning_rate = 0.001
         momentum = 0.9
         num_epochs = 2
 
-        net = CNN.Net(3).to(device)
-
-        train_loader = torch.utils.data.DataLoader(self.dataset, shuffle=True, num_workers=2)
+        net = CNN.Net(2).to(device)
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momentum)
@@ -34,32 +31,39 @@ class Node:
 
         for epoch in range(num_epochs):
 
-            for (inputs, labels) in train_loader:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-                l_r_labels = labels.to(device)
+            indices = []
 
-                left_outputs = left_net(inputs)
-                _, left_predicted = torch.max(left_outputs.data, 1)
+            train_loader = torch.utils.data.DataLoader(self.data_set, shuffle=True, num_workers=2)
 
-                right_outputs = right_net(inputs)
-                _, right_predicted = torch.max(right_outputs.data, 1)
+            for i, (image, label) in enumerate(train_loader):
+                image = image.to(device)
+                label = label.to(device)
+                l_r_label = label.to(device)
 
-                for l in range(batch_size):
-                    label = labels[l]
-                    left_pred = left_predicted[l]
-                    right_pred = right_predicted[l]
-                    l_r_labels[l] = 2  # don't care
-                    if label == left_pred and label != right_pred:
-                        l_r_labels[l] = 0  # left
-                    if label != left_pred and label == right_pred:
-                        l_r_labels[l] = 1  # right
+                left_output = left_net(image)
+                _, left_predicted = torch.max(left_output.data, 1)
 
-                optimizer.zero_grad()
-                outputs = net(inputs)
-                loss = criterion(outputs, l_r_labels)
-                loss.backward()
-                optimizer.step()
+                right_output = right_net(image)
+                _, right_predicted = torch.max(right_output.data, 1)
+
+                if (label[0] == left_predicted[0] and label[0] != right_predicted[0]) or (label[0] != left_predicted[0]
+                                                                                          and label[0] == right_predicted[0]):
+
+                    if label[0] == left_predicted[0] and label[0] != right_predicted[0]:
+                        l_r_label[0] = 0  # left
+                        indices.append(i)
+
+                    if label[0] != left_predicted[0] and label[0] == right_predicted[0]:
+                        l_r_label[0] = 1  # right
+                        indices.append(i)
+
+                    optimizer.zero_grad()
+                    output = net(image)
+                    loss = criterion(output, l_r_label)
+                    loss.backward()
+                    optimizer.step()
+
+            self.data_set = torch.utils.data.Subset(self.data_set, indices)
 
         print('Finished Training')
 

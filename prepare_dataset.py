@@ -1,7 +1,7 @@
 import torch
 import torchvision
 import torchvision.transforms as transforms
-import group_dataset
+import selected_dataset
 
 
 def prepare_dataset(groups):
@@ -15,11 +15,25 @@ def prepare_dataset(groups):
 
     for i, (image, label) in enumerate(train_loader):
         for l in range(len(groups)):
-            if label == groups[l]:
-                indices.append(i)
+            for m in range(len(groups[l])):
+                if label == groups[l][m]:
+                    indices.append(i)
 
-    dataset = torch.utils.data.Subset(train_set, indices)
+    data_set = torch.utils.data.Subset(train_set, indices)
 
-    new_dataset = group_dataset.GroupDataset(dataset, groups)
+    new_dataset = selected_dataset.SelectedDataset(data_set, groups)
 
-    return new_dataset
+    even_i = []
+    odd_i = []
+
+    for i in range(len(new_dataset)):
+        if i % 2:
+            odd_i.append(i)
+        else:
+            even_i.append(i)
+
+    left_dataset = torch.utils.data.Subset(new_dataset, odd_i)
+
+    right_dataset = torch.utils.data.Subset(new_dataset, even_i)
+
+    return new_dataset, left_dataset, right_dataset

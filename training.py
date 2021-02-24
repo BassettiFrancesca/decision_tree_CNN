@@ -5,8 +5,7 @@ import CNN
 
 
 def train(train_set, PATH):
-    #  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = 'cpu'
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     learning_rate = 0.001
     momentum = 0.9
     num_epochs = 2
@@ -19,13 +18,14 @@ def train(train_set, PATH):
     optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momentum)
 
     for epoch in range(num_epochs):
-
-        for i, (inputs, labels) in enumerate(train_loader):
+        for image, label in train_loader:
+            image = image.to(device)
+            label = label.to(device)
 
             optimizer.zero_grad()
 
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
+            output = net(image)
+            loss = criterion(output, label)
             loss.backward()
             optimizer.step()
 
