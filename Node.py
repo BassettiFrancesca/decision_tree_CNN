@@ -16,7 +16,7 @@ class Node:
 
         learning_rate = 0.001
         momentum = 0.9
-        num_epochs = 3
+        num_epochs = 1
 
         net = CNN.Net(2).to(device)
 
