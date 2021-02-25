@@ -16,7 +16,7 @@ class Node:
 
         learning_rate = 0.001
         momentum = 0.9
-        num_epochs = 2
+        num_epochs = 3
 
         net = CNN.Net(2).to(device)
 
@@ -29,11 +29,18 @@ class Node:
         right_net = CNN.Net(2).to(device)
         right_net.load_state_dict(torch.load(self.right_child))
 
+        left = [0 for i in range(num_epochs)]
+        right = [0 for i in range(num_epochs)]
+        dcw = [0 for i in range(num_epochs)]
+        dcr = [0 for i in range(num_epochs)]
+
         for epoch in range(num_epochs):
 
             indices = []
 
-            train_loader = torch.utils.data.DataLoader(self.data_set, shuffle=True, num_workers=2)
+            train_loader = torch.utils.data.DataLoader(self.data_set, shuffle=False, num_workers=2)
+
+            print(f'Length dataset: {len(train_loader)}')
 
             for i, (image, label) in enumerate(train_loader):
                 image = image.to(device)
@@ -46,25 +53,36 @@ class Node:
                 right_output = right_net(image)
                 _, right_predicted = torch.max(right_output.data, 1)
 
-                if (label[0] == left_predicted[0] and label[0] != right_predicted[0]) or (label[0] != left_predicted[0]
-                                                                                          and label[0] == right_predicted[0]):
+                if right_predicted[0] != left_predicted[0]:
 
-                    if label[0] == left_predicted[0] and label[0] != right_predicted[0]:
+                    if label[0] == left_predicted[0]:
                         l_r_label[0] = 0  # left
                         indices.append(i)
-
-                    if label[0] != left_predicted[0] and label[0] == right_predicted[0]:
-                        l_r_label[0] = 1  # right
-                        indices.append(i)
+                        left[epoch] += 1
+                    else:
+                        if label[0] == right_predicted[0]:
+                            l_r_label[0] = 1  # right
+                            indices.append(i)
+                            right[epoch] += 1
 
                     optimizer.zero_grad()
                     output = net(image)
                     loss = criterion(output, l_r_label)
                     loss.backward()
                     optimizer.step()
-
+                else:
+                    if label[0] == left_predicted[0] and label[0] == right_predicted[0]:
+                        dcr[epoch] += 1
+                    else:
+                        if label[0] != left_predicted[0] and label[0] != right_predicted[0]:
+                            dcw[epoch] += 1
             self.data_set = torch.utils.data.Subset(self.data_set, indices)
+            print(f'N° indices: {len(indices)}')
 
         print('Finished Training')
+        print(f'Right: {right}')
+        print(f'Left: {left}')
+        print(f'DontCareWrong: {dcw}')
+        print(f'DontCareRight: {dcr}')
 
         torch.save(net.state_dict(), self.PATH)

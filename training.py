@@ -8,7 +8,7 @@ def train(train_set, PATH):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     learning_rate = 0.001
     momentum = 0.9
-    num_epochs = 2
+    num_epochs = 1
 
     net = CNN.Net(2).to(device)
 
@@ -29,6 +29,6 @@ def train(train_set, PATH):
             loss.backward()
             optimizer.step()
 
-    print('Finished Training')
+    print(f'Finished Training {PATH}')
 
     torch.save(net.state_dict(), PATH)

@@ -14,26 +14,38 @@ def prepare_dataset(groups):
     indices = []
 
     for i, (image, label) in enumerate(train_loader):
-        for l in range(len(groups)):
-            for m in range(len(groups[l])):
-                if label == groups[l][m]:
+        for j in range(len(groups)):
+            for k in range(len(groups[j])):
+                if label == groups[j][k]:
                     indices.append(i)
 
     data_set = torch.utils.data.Subset(train_set, indices)
 
     new_dataset = selected_dataset.SelectedDataset(data_set, groups)
 
-    even_i = []
-    odd_i = []
+    print(f'Length new_dataset: {len(new_dataset)}')
 
-    for i in range(len(new_dataset)):
-        if i % 2:
-            odd_i.append(i)
-        else:
-            even_i.append(i)
+    node_i = []
+    left_i = []
+    right_i = []
 
-    left_dataset = torch.utils.data.Subset(new_dataset, odd_i)
+    for i in range(0, len(new_dataset), 3):
+        node_i.append(i)
+    for j in range(1, len(new_dataset), 3):
+        left_i.append(j)
+    for k in range(2, len(new_dataset), 3):
+        right_i.append(k)
 
-    right_dataset = torch.utils.data.Subset(new_dataset, even_i)
+    node_dataset = torch.utils.data.Subset(new_dataset, node_i)
 
-    return new_dataset, left_dataset, right_dataset
+    print(f'Length node_dataset: {len(node_dataset)}')
+
+    left_dataset = torch.utils.data.Subset(new_dataset, left_i)
+
+    print(f'Length left_dataset: {len(left_dataset)}')
+
+    right_dataset = torch.utils.data.Subset(new_dataset, right_i)
+
+    print(f'Length right_dataset: {len(right_dataset)}')
+
+    return node_dataset, left_dataset, right_dataset
