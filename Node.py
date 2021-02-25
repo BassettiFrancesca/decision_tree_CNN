@@ -11,12 +11,11 @@ class Node:
         self.right_child = right_child
         self.PATH = PATH
 
-    def train(self):
+    def train(self, num_epochs):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         learning_rate = 0.001
         momentum = 0.9
-        num_epochs = 1
 
         net = CNN.Net(2).to(device)
 
@@ -29,10 +28,10 @@ class Node:
         right_net = CNN.Net(2).to(device)
         right_net.load_state_dict(torch.load(self.right_child))
 
-        left = [0 for i in range(num_epochs)]
-        right = [0 for i in range(num_epochs)]
-        dcw = [0 for i in range(num_epochs)]
-        dcr = [0 for i in range(num_epochs)]
+        left = 0
+        right = 0
+        dcw = 0
+        dcr = 0
 
         for epoch in range(num_epochs):
 
@@ -40,7 +39,7 @@ class Node:
 
             train_loader = torch.utils.data.DataLoader(self.data_set, shuffle=False, num_workers=2)
 
-            print(f'Length dataset: {len(train_loader)}')
+            #print(f'Length dataset: {len(train_loader)}')
 
             for i, (image, label) in enumerate(train_loader):
                 image = image.to(device)
@@ -58,12 +57,14 @@ class Node:
                     if label[0] == left_predicted[0]:
                         l_r_label[0] = 0  # left
                         indices.append(i)
-                        left[epoch] += 1
+                        if epoch == 0:
+                            left += 1
                     else:
                         if label[0] == right_predicted[0]:
                             l_r_label[0] = 1  # right
                             indices.append(i)
-                            right[epoch] += 1
+                            if epoch == 0:
+                                right += 1
 
                     optimizer.zero_grad()
                     output = net(image)
@@ -71,14 +72,15 @@ class Node:
                     loss.backward()
                     optimizer.step()
                 else:
-                    if label[0] == left_predicted[0] and label[0] == right_predicted[0]:
-                        dcr[epoch] += 1
-                    else:
-                        if label[0] != left_predicted[0] and label[0] != right_predicted[0]:
-                            dcw[epoch] += 1
+                    if epoch == 0:
+                        if label[0] == left_predicted[0] and label[0] == right_predicted[0]:
+                            dcr += 1
+                        else:
+                            if label[0] != left_predicted[0] and label[0] != right_predicted[0]:
+                                dcw += 1
             self.data_set = torch.utils.data.Subset(self.data_set, indices)
-            print(f'N° indices: {len(indices)}')
-
+            #print(f'N° indices: {len(indices)}')
+        print(f'N° indices: {len(indices)}')
         print('Finished Training')
         print(f'Right: {right}')
         print(f'Left: {left}')
