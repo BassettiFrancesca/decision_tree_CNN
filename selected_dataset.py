@@ -9,8 +9,8 @@ class SelectedDataset(Dataset):
 
     def __getitem__(self, idx):
         (x, y) = self._dataset[idx]
-        for i in range(len(self._groups)):
-            if y in self._groups[i]:
+        for (i, group) in enumerate(self._groups):
+            if y in group:
                 return x, i
 
     def __len__(self):
