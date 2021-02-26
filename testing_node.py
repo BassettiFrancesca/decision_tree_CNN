@@ -8,9 +8,7 @@ def test(test_set, PATHS):
 
     classes = ('0', '1')
 
-    num_workers = 2
-
-    test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, num_workers=num_workers)
+    test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, num_workers=2)
 
     net = CNN.Net(2).to(device)
     net.load_state_dict(torch.load(PATHS[0]))
@@ -26,27 +24,23 @@ def test(test_set, PATHS):
     n_class_correct = [0 for i in range(2)]
     n_class_samples = [0 for i in range(2)]
     with torch.no_grad():
-        for (images, labels) in test_loader:
-            images = images.to(device)
-            labels = labels.to(device)
-            outputs = net(images)
+        for (image, label) in test_loader:
+            image = image.to(device)
+            label = label.to(device)
+            outputs = net(image)
             _, predicted = torch.max(outputs.data, 1)
             if predicted[0] == 0:
-                outputs = left_net(images)
+                outputs = left_net(image)
                 _, predicted = torch.max(outputs.data, 1)
-            else:
-                if predicted[0] == 1:
-                    outputs = right_net(images)
-                    _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            elif predicted[0] == 1:
+                outputs = right_net(image)
+                _, predicted = torch.max(outputs.data, 1)
+            total += label.size(0)
+            correct += (predicted == label).sum().item()
 
-            for i in range(1):
-                label = labels[i]
-                pred = predicted[i]
-                if (label == pred):
-                    n_class_correct[label] += 1
-                n_class_samples[label] += 1
+            if label[0] == predicted[0]:
+                n_class_correct[label[0]] += 1
+            n_class_samples[label[0]] += 1
 
     for i in range(2):
         acc = 100 * n_class_correct[i] / n_class_samples[i]

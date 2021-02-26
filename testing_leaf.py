@@ -8,9 +8,10 @@ def test(test_set, PATH):
 
     classes = ('0', '1')
 
+    batch_size = 4
     num_workers = 2
 
-    test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, num_workers=num_workers)
+    test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, batch_size=batch_size, num_workers=num_workers)
 
     net = CNN.Net(2).to(device)
     net.load_state_dict(torch.load(PATH))
@@ -28,10 +29,10 @@ def test(test_set, PATH):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-            for i in range(1):
+            for i in range(len(images)):
                 label = labels[i]
                 pred = predicted[i]
-                if (label == pred):
+                if label == pred:
                     n_class_correct[label] += 1
                 n_class_samples[label] += 1
 

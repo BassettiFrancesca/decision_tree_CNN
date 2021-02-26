@@ -14,55 +14,45 @@ def prepare_dataset(groups):
     test_set = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, num_workers=2)
 
-    train_indices = []
-
-    test_indices = []
+    index_groups = [[] for i in range(len(groups))]
 
     for i, (image, label) in enumerate(train_loader):
         for j in range(len(groups)):
-            for k in range(len(groups[j])):
-                if label[0] == groups[j][k]:
-                    train_indices.append(i)
+            if label[0] in groups[j]:
+                index_groups[j].append(i)
+
+    node_i = []
+    leaf_i = []
+
+    for i in range(len(index_groups)):
+        for j in range(0, len(index_groups[i]), 2):
+            node_i.append(index_groups[i][j])
+        for k in range(1, len(index_groups[i]), 2):
+            leaf_i.append(index_groups[i][k])
+
+    node_dataset = torch.utils.data.Subset(train_set, node_i)
+
+    train_node_dataset = selected_dataset.SelectedDataset(node_dataset, groups)
+
+    print(f'Size node_dataset: {len(train_node_dataset)}')
+
+    leaf_dataset = torch.utils.data.Subset(train_set, leaf_i)
+
+    train_leaf_dataset = selected_dataset.SelectedDataset(leaf_dataset, groups)
+
+    print(f'Size leaf_dataset: {len(train_leaf_dataset)}')
+
+    test_indices = []
 
     for i, (image, label) in enumerate(test_loader):
         for j in range(len(groups)):
-            for k in range(len(groups[j])):
-                if label[0] == groups[j][k]:
-                    test_indices.append(i)
-
-    train_data_set = torch.utils.data.Subset(train_set, train_indices)
-
-    train_new_dataset = selected_dataset.SelectedDataset(train_data_set, groups)
-
-    print(f'Length train_new_dataset: {len(train_new_dataset)}')
+            if label[0] in groups[j]:
+                test_indices.append(i)
 
     test_data_set = torch.utils.data.Subset(test_set, test_indices)
 
     test_new_dataset = selected_dataset.SelectedDataset(test_data_set, groups)
 
-    print(f'Length test_new_dataset: {len(test_new_dataset)}')
+    print(f'Size test_new_dataset: {len(test_new_dataset)}')
 
-    node_i = []
-    left_i = []
-    right_i = []
-
-    for i in range(0, len(train_new_dataset), 3):
-        node_i.append(i)
-    for j in range(1, len(train_new_dataset), 3):
-        left_i.append(j)
-    for k in range(2, len(train_new_dataset), 3):
-        right_i.append(k)
-
-    node_dataset = torch.utils.data.Subset(train_new_dataset, node_i)
-
-    print(f'Length node_dataset: {len(node_dataset)}')
-
-    left_dataset = torch.utils.data.Subset(train_new_dataset, left_i)
-
-    print(f'Length left_dataset: {len(left_dataset)}')
-
-    right_dataset = torch.utils.data.Subset(train_new_dataset, right_i)
-
-    print(f'Length right_dataset: {len(right_dataset)}')
-
-    return node_dataset, left_dataset, right_dataset, test_new_dataset
+    return train_node_dataset, train_leaf_dataset, test_new_dataset
