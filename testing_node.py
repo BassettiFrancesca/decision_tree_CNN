@@ -10,13 +10,13 @@ def test(test_set, PATHS):
 
     test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, num_workers=2)
 
-    net = CNN.Net(2).to(device)
+    net = CNN.Net().to(device)
     net.load_state_dict(torch.load(PATHS[0]))
 
-    left_net = CNN.Net(2).to(device)
+    left_net = CNN.Net().to(device)
     left_net.load_state_dict(torch.load(PATHS[1]))
 
-    right_net = CNN.Net(2).to(device)
+    right_net = CNN.Net().to(device)
     right_net.load_state_dict(torch.load(PATHS[2]))
 
     correct = 0

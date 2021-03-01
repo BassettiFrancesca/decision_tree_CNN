@@ -17,15 +17,15 @@ class Node:
         learning_rate = 0.001
         momentum = 0.9
 
-        net = CNN.Net(2).to(device)
+        net = CNN.Net().to(device)
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momentum)
 
-        left_net = CNN.Net(2).to(device)
+        left_net = CNN.Net().to(device)
         left_net.load_state_dict(torch.load(self.left_child))
 
-        right_net = CNN.Net(2).to(device)
+        right_net = CNN.Net().to(device)
         right_net.load_state_dict(torch.load(self.right_child))
 
         left = 0

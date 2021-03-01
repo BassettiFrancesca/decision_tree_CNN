@@ -13,7 +13,7 @@ def test(test_set, PATH):
 
     test_loader = torch.utils.data.DataLoader(test_set, shuffle=False, batch_size=batch_size, num_workers=num_workers)
 
-    net = CNN.Net(2).to(device)
+    net = CNN.Net().to(device)
     net.load_state_dict(torch.load(PATH))
 
     correct = 0

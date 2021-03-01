@@ -13,7 +13,7 @@ def train(train_set, PATH):
     momentum = 0.9
     num_epochs = 1
 
-    net = CNN.Net(2).to(device)
+    net = CNN.Net().to(device)
 
     train_loader = torch.utils.data.DataLoader(train_set, shuffle=True, batch_size=batch_size, num_workers=num_workers)
 
