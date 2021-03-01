@@ -30,6 +30,10 @@ def prepare_dataset(groups):
         for k in range(1, len(index_groups[i]), 2):
             leaf_i.append(index_groups[i][k])
 
+    node_i.sort()
+
+    leaf_i.sort()
+
     node_dataset = torch.utils.data.Subset(train_set, node_i)
 
     train_node_dataset = selected_dataset.SelectedDataset(node_dataset, groups)
